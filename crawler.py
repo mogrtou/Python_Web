@@ -58,13 +58,31 @@ def movie_url_list(html):
     left = '<div class="pic">'
     index = html.find(left)
     while index != -1:
-        sub_str = html[index]
+        sub_str = html[index:] # : 是指当前位置，往后到结束么
         url = string_between(sub_str, '<a href="', '">')
 
         result.append(url)
         index = html.find(left, index + len(left))
 
     return result
+
+def movie_get_page_html(html):
+    result = []
+
+    Begin = '<span class="thispage">'
+    end = '<span class="next">'
+    left = '<a href="'
+    index = html.find(Begin)
+    endindex = html.find(end)
+    while index != -1:
+        sub_str = html[index:]
+        url = string_between(sub_str, '<a href="', '" >')
+        index = html.find(left, index + len(left))
+        if index < endindex:
+            result.append(url)
+    return result
+
+
 
 
 def merge_data(name_list, url_list):
@@ -78,6 +96,7 @@ def merge_data(name_list, url_list):
         }
         result.append(d)
     return result
+
 
 
 # 下面是一些测试函数
@@ -98,11 +117,11 @@ def tests():
 def main():
     url = 'https://movie.douban.com/top250'
     html = html_from_url(url)
-    name_list = movie_name_list(html)
-    url_list = movie_url_list(html)
-    data = merge_data(name_list, url_list)
-    print('data', data)
-
+    # name_list = movie_name_list(html)
+    # url_list = movie_url_list(html)
+    # data = merge_data(name_list, url_list)
+    # print('data', data)
+    print(movie_get_page_html(html))
 
 if __name__ == '__main__':
     main()
