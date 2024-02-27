@@ -1,3 +1,5 @@
+import json
+
 import requests
 
 
@@ -45,7 +47,7 @@ def movie_name_list(html):
         name = string_between(sub_str, left, '</span>')
 
         # 过滤掉没用数据
-        if not name.startswith('&nbsp;/&nbsp;'):        
+        if not name.startswith('&nbsp;/&nbsp;'):
             result.append(name)
         index = html.find(left, index + len(left))
 
@@ -66,23 +68,21 @@ def movie_url_list(html):
 
     return result
 
-def movie_get_page_html(html):
-    result = []
 
-    Begin = '<span class="thispage">'
+def movie_get_page_link(html):
+    result = ['https://movie.douban.com/top250']
+
+    left = '<a href="?start='
     end = '<span class="next">'
-    left = '<a href="'
-    index = html.find(Begin)
-    endindex = html.find(end)
+    index = html.find(left)
+    end_index = html.find(end)
     while index != -1:
         sub_str = html[index:]
-        url = string_between(sub_str, '<a href="', '" >')
-        index = html.find(left, index + len(left))
-        if index < endindex:
+        url = 'https://movie.douban.com/top250' + string_between(sub_str, '<a href="', '" >')
+        if index < end_index:
             result.append(url)
+        index = html.find(left, index + len(left))
     return result
-
-
 
 
 def merge_data(name_list, url_list):
@@ -96,6 +96,13 @@ def merge_data(name_list, url_list):
         }
         result.append(d)
     return result
+
+
+def merge_data_to_json(data):
+    data = json.dumps(data)
+    with open('Movie.json', 'w') as f:
+        f.write(data)
+        # json.dump(data, f)
 
 
 
@@ -115,13 +122,21 @@ def tests():
 # 程序主入口
 
 def main():
+    name_list = []
+    url_list = []
     url = 'https://movie.douban.com/top250'
     html = html_from_url(url)
-    # name_list = movie_name_list(html)
-    # url_list = movie_url_list(html)
-    # data = merge_data(name_list, url_list)
-    # print('data', data)
-    print(movie_get_page_html(html))
+    result = movie_get_page_link(html)
+
+    for i in range(len(result)):
+        html = html_from_url(result[i])
+        name_list.extend(movie_name_list(html))
+        url_list.extend(movie_url_list(html))
+
+    data = merge_data(name_list, url_list)
+    merge_data_to_json(data)
+    print('data', data)
+
 
 if __name__ == '__main__':
     main()
